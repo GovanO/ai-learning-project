@@ -1,0 +1,15 @@
+{
+  "name": "ai-learning-project",
+  "version": "1.0.0",
+  "description": "Project to showcase ai usage using specs and workflows",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "roman.bakovskyi@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "node-telegram-bot-api": "^0.67.0"
+  }
+}
