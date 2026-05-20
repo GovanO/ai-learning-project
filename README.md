@@ -1,2 +1,2 @@
 # ai-learning-project
-Project to showcase ai usage using specs and workflows
+Test project to showcase ai usage using defined specs and n8n workflows
