@@ -1,0 +1,278 @@
+{
+  "name": "Main execution workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9d316e8b-ae5d-4856-a913-a4f6ba1cb7db",
+      "name": "Schedule Trigger",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "51.1079"
+            },
+            {
+              "name": "longitude",
+              "value": "17.0385"
+            },
+            {
+              "name": "hourly",
+              "value": "temperature_2m"
+            },
+            {
+              "name": "timezone",
+              "value": "Europe/Warsaw"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7bcc9dbc-5099-4723-b633-f9bb948505f6",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const date = new Date();\n\nconst year = date.getFullYear();\nconst month = `${date.getMonth() + 1 < 10 ? '0' : ''}${date.getMonth() + 1}`\nconst day = `${date.getDate() < 10 ? '0' : ''}${date.getDate()}`\nconst hours = `${date.getHours() < 10 ? '0' : ''}${date.getHours()}`\nconst minutes = `${date.getMinutes() < 10 ? '0' : ''}${date.getMinutes()}`\nconst today = `${year}-${month}-${day}T${hours}:${minutes}`\n\nconst data = $input.first().json\n\nconst times = data.hourly.time;\nconst temps = data.hourly.temperature_2m;\n\nlet formattedDate = {}\n\ntimes.find((time, idx) => {\n  const timeToCompare = time.slice(0, 16);;\n  if (today >= timeToCompare) {\n      formattedDate = {\n        day: time.split('T')[0],\n        time: time.split('T')[1],\n        temperature_c: temps[idx]\n      }\n  }\n})\n\nconsole.log(formattedDate);\n\nreturn formattedDate;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "f828f2cb-34d8-417b-a5f2-3c3a6681317b",
+      "name": "Code in JavaScript",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b422ba7a-8213-4fbc-80f7-d45c2b267d79",
+              "leftValue": "={{ $json.temperature_c }}",
+              "rightValue": 22,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "44c0aa51-795b-42cc-92b1-f9c309113113",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1JkPQVP02jK0xXNmLM1GrqLv71ZWfj68wEKlBgf7h1CQ",
+          "mode": "list",
+          "cachedResultName": "ai-upskilling-sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JkPQVP02jK0xXNmLM1GrqLv71ZWfj68wEKlBgf7h1CQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JkPQVP02jK0xXNmLM1GrqLv71ZWfj68wEKlBgf7h1CQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Day": "={{ $json.day }}",
+            "Time": "={{ $json.time }}",
+            "Temparature": "={{ $json.temperature_c }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Day",
+              "displayName": "Day",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Temparature",
+              "displayName": "Temparature",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        832,
+        128
+      ],
+      "id": "a00786af-90db-4fde-a38b-51a22ef868e2",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iCLAIDxxl4zYm5Nv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "938110434",
+        "text": "=Weather in Wroclaw (Poland) atm:\nday: {{ $json.day }}\ntime: {{ $json.time }}\ntemerature: {{ $json.temperature_c }} C\n\n",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        -96
+      ],
+      "id": "95043071-8e71-462e-92d5-751d4b248e3b",
+      "name": "Send a text message",
+      "webhookId": "a1d609c4-37f8-4985-8bd5-97f40ec50518",
+      "credentials": {
+        "telegramApi": {
+          "id": "7N8htlvArNZDYBJ6",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "WMzzgWZYk8ctFkD4",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "89d1f3c2-6e7a-40cd-8c40-d0a8b4512efe",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "39e3052189970d824a8fb336585062d7c794a13f3d874fb7dfcf4d4895d83749"
+  },
+  "id": "ig7iUSgoS5aX6qpd",
+  "tags": []
+}
